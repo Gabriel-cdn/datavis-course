@@ -12,12 +12,22 @@ body {
 }
 
 .blue {
-    background-color: #add8e6;
+    background-color: #3f586b;
     color: #f0f8ff;
 }
 
 .red {
-    background-color: #e9967a;
+    background-color: #a8685b;
+    color: #f0f8ff;
+}
+
+.green {
+    background-color: #597b53;
+    color: #f0f8ff;
+}
+
+.yellow {
+    background-color: #96953e;
     color: #f0f8ff;
 }
 
@@ -26,14 +36,31 @@ h1 {
 }
 
 .h-bar {
-    min-height: 15px;
+    min-height: 20px;
     min-width: 10px;
-    background-color: steelblue;
-    margin-bottom: 2px;
+    /*background-color: steelblue;*/
     font-size: 11px;
-    color: #f0f8ff;
+    /*color: #f0f8ff;*/
     text-align: right;
     padding-right: 2px;
+    float:left;
+}
+
+.container{
+    display:table;
+    margin-bottom: 2px;
+}
+
+.label {
+    margin-bottom: 2px;
+    font-size: 14px;
+    color: #000011;
+    padding-left: 2px;
+    display:table-cell;
+    vertical-align:middle;
+}
+
+.count{
 }
 
 .v-bar {
@@ -46,11 +73,6 @@ h1 {
     text-align: center;
     width: 10px;
     display: inline-block;
-}
-
-div {
-    padding-top: 10px;
-    padding-bottom: 10px;
 }
 
 .code {

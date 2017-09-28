@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Tarefa - Movies D3</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+</head>
+
+<body>
+    <h2>Maiores Bilheterias</h2>
+    <div id="bilheteria"></div>
+    <h2>Maiores Orcamentos</h2>
+    <div id="orcamento"></div>
+    <h2>Maiores Lucros</h2>
+    <div id="lucro"></div>
+    <h2>Maiores Bilheterias por Gêneros</h2>
+    <div id="genero"></div>
+
+    <script type="text/javascript">
+        function renderBilheteria(data,comparator) {
+            // Enter
+            d3.select("#bilheteria").selectAll("div.container")
+                .data(data)
+                .enter()
+                    .append("div")
+                    .attr("class", "container")
+                        .append("div")
+                        .attr("class", "h-bar green")
+                            .append("span")
+                            .attr("class", "count")
+            d3.select("#bilheteria").selectAll("div.container")
+                .data(data)
+                    .append("span") 
+                    .attr("class", "label")                      
+            // Update
+            d3.select("#bilheteria").selectAll("div.h-bar")
+                .data(data) 
+                    .style("width", function (d) {
+                        return (d.Worldwide_Gross_M/3) + "px";
+                    })
+            d3.select("#bilheteria").selectAll("span.label")
+                .data(data)
+                    .text(function (d) {
+                        return d.Film;
+                    });
+            d3.select("#bilheteria").selectAll("span.count")
+                .data(data)
+                    .text(function (d) {
+                        return d.Worldwide_Gross_M;
+                    });
+            if(comparator)
+                d3.select("#bilheteria").selectAll("div.container")
+                    .sort(comparator);
+        }
+
+        function renderOrcamento(data,comparator) {
+            // Enter
+            d3.select("#orcamento").selectAll("div.container")
+                .data(data)
+                .enter()
+                    .append("div")
+                    .attr("class", "container")
+                        .append("div")
+                        .attr("class", "h-bar red")
+                            .append("span")
+                            .attr("class", "count")
+            d3.select("#orcamento").selectAll("div.container")
+                .data(data)
+                    .append("span") 
+                    .attr("class", "label")                      
+            // Update
+            d3.select("#orcamento").selectAll("div.h-bar")
+                .data(data) 
+                    .style("width", function (d) {
+                        return (d.Budget_M*2) + "px";
+                    })
+            d3.select("#orcamento").selectAll("span.label")
+                .data(data)
+                    .text(function (d) {
+                        return d.Film;
+                    });
+            d3.select("#orcamento").selectAll("span.count")
+                .data(data)
+                    .text(function (d) {
+                        return d.Budget_M;
+                    });
+            if(comparator)
+                d3.select("#orcamento").selectAll("div.container")
+                    .sort(comparator);
+        }
+
+        function renderLucro(data,comparator) {
+            // Enter
+            d3.select("#lucro").selectAll("div.container")
+                .data(data)
+                .enter()
+                    .append("div")
+                    .attr("class", "container")
+                        .append("div")
+                        .attr("class", "h-bar blue")
+                            .append("span")
+                            .attr("class", "count")
+            d3.select("#lucro").selectAll("div.container")
+                .data(data)
+                    .append("span") 
+                    .attr("class", "label")                      
+            // Update
+            d3.select("#lucro").selectAll("div.h-bar")
+                .data(data) 
+                    .style("width", function (d) {
+                        return (d.Worldwide_Gross_M-d.Budget_M)/3 + "px";
+                    })
+            d3.select("#lucro").selectAll("span.label")
+                .data(data)
+                    .text(function (d) {
+                        return d.Film;
+                    });
+            d3.select("#lucro").selectAll("span.count")
+                .data(data)
+                    .text(function (d) {
+                        return d.Worldwide_Gross_M-d.Budget_M;
+                    });
+            if(comparator)
+                d3.select("#lucro").selectAll("div.container")
+                    .sort(comparator);
+        }
+
+        function renderBilheteriaGenero(data,comparator) {
+            let generos = getDataGenres(data) 
+            // Enter
+            d3.select("#genero").selectAll("div.container")
+                .data(generos)
+                .enter()
+                    .append("div")
+                    .attr("class", "container")
+                        .append("div")
+                        .attr("class", "h-bar yellow")
+                            .append("span")
+                            .attr("class", "count")
+            d3.select("#genero").selectAll("div.container")
+                .data(generos)
+                    .append("span") 
+                    .attr("class", "label")                      
+            // Update
+            d3.select("#genero").selectAll("div.h-bar")
+                .data(generos) 
+                    .style("width", function (d) {
+                        return (d.bilheteria)/15 + "px";
+                    })
+            d3.select("#genero").selectAll("span.label")
+                .data(generos)
+                    .text(function (d) {
+                        return d.genero;
+                    });
+            d3.select("#genero").selectAll("span.count")
+                .data(generos)
+                    .text(function (d) {
+                        return d.bilheteria;
+                    });
+            if(comparator)
+                d3.select("#genero").selectAll("div.container")
+                    .sort(comparator);
+        }
+
+        function getDataGenres(data){
+            let generos = []
+            for (var i = 0; i < data.length; i++){
+                var movie = data[i];
+                var pos = search(movie.Genre,generos)
+                if(pos!=-1){
+                    generos[pos].bilheteria=generos[pos].bilheteria+movie.Worldwide_Gross_M
+                }else{
+                    generos.push({"genero":movie.Genre,"bilheteria":movie.Worldwide_Gross_M});
+                }
+            }
+            function search(nameKey, myArray){
+                for (var i=0; i < myArray.length; i++) {
+                    if (myArray[i].genero === nameKey) {
+                        return i;
+                    }
+                }
+                return -1
+            }
+            return generos
+        }
+
+        var comparePorBilheteria = function (a, b) { 
+            return a.Worldwide_Gross_M < b.Worldwide_Gross_M?1:-1;
+        };
+
+        var comparePorOrcamento = function (a, b) { 
+            return a.Budget_M < b.Budget_M?1:-1;
+        };
+
+        var comparePorLucro = function (a, b) { 
+            return a.Worldwide_Gross_M-a.Budget_M < b.Worldwide_Gross_M-b.Budget_M?1:-1;
+        };
+
+        var comparePorGeneroBilheteria = function (a, b) { 
+            return a.bilheteria < b.bilheteria?1:-1;
+        };
+        
+        d3.json("movies.json", function(error, json){ 
+            renderBilheteria(json,comparePorBilheteria);
+            renderOrcamento(json,comparePorOrcamento);
+            renderLucro(json,comparePorLucro);
+            renderBilheteriaGenero(json,comparePorGeneroBilheteria);
+        });
+    </script>
+</body>
+</html>
