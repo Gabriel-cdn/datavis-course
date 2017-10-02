@@ -13,6 +13,7 @@
 <body>
      <div><h1> Valores das ações da Apple e do Facebook</h1>
         <div id="chart"></div>
+        <div id="chart2"></div>
     </div>
 	<script type="text/javascript">
         var barChart = dc.barChart('#chart');
@@ -41,6 +42,33 @@
 
             dc.renderAll();
 		});
+
+        var barChart2 = dc.barChart('#chart2');
+
+        d3.json("movies.json", function(error, data){ 
+            //criando um crossfilter
+            var facts = crossfilter(data);
+
+            var genreDim = facts.dimension(function(d){
+                return d.Genre;
+            });
+
+            var bilheteriaGroup = genreDim.group().reduceSum(function(d){
+                return d.Worldwide_Gross_M;
+            });
+            barChart2.width(800)
+                     .height(400)
+                     .margins({top: 30, right: 50, bottom: 25, left: 40})
+                     .dimension(genreDim)
+                     .xUnits(dc.units.ordinal)
+                     .x(d3.scale.ordinal())
+                     .renderHorizontalGridLines(true)
+                     .legend(dc.legend().x(650).y(10).itemHeight(13).gap(5))
+                     .brushOn(false)
+                     .group(bilheteriaGroup);
+
+            dc.renderAll();
+        });
 	</script>			
 </body>
 </html>
