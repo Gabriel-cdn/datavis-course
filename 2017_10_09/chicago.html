@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+    <html>
+        <head>
+            <title> Chicago Crimes</title>
+             <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+            <!-- Optional theme -->
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+            <!-- Custom styles for this template -->
+            <link  rel="stylesheet" href="css/starter-template.css">
+            <link rel="stylesheet" href="css/dc.css">
+            <link rel="stylesheet" href="css/styles.css">
+            <script src="js/crossfilter.js" charset="utf-8"></script>
+            <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+            <script src="js/dc.js" charset="utf-8"></script>
+            <style type="text/css"></style>
+            <!-- Leaflet -->
+            <link rel="stylesheet"
+                  href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+                  integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+                  crossorigin=""/>
+            <!-- Make sure you put this AFTER Leaflet's CSS -->
+            <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+                    integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+                    crossorigin=""></script>
+        </head>
+        <body>
+            <div class='container-fluid'>
+                <h1> Crimes in Chicago </h1>
+                <div id="mapid"></div>
+                <div id='total-chart'>
+                  <h4> Number of Events by Magnitude </h4>
+                </div>
+                <div id='per-day-chart'>
+                  <h4> Events by Depth (km) </h4>
+                </div> 
+            </div>
+            <script type="text/javascript">
+
+            var totalChart = dc.rowChart('#total-chart');
+            var perDayChart = dc.seriesChart('#per-day-chart');
+
+            var map = L.map('mapid').setView([41.853034, -87.624647], 10);
+            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+              attribution: '&copy; <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors', maxZoom: 17
+            }).addTo(map);
+
+            var colorScale = d3.scale.ordinal()
+                .domain(["HOMICIDE","ROBBERY","BURGLARY"])
+                .range(["#9e4d56","#6f9364","#726089"]);
+
+            // load data from a csv file
+            d3.csv("crimes_chicago_sep_2017.csv", function (data) {
+              // format our Data               09/01/2017 12:55:00 AM
+              var dtgFormat = d3.time.format.utc("%m/%d/%Y %I:%M:%S %p");
+              data.forEach(function(d){
+                  d.date = dtgFormat.parse(d.Date);
+                  d.type = d["Primary Type"];
+                  d.lat = +d.Latitude;
+                  d.long = +d.Longitude;
+                  var circle = L.circle([d.lat, d.long], 100, {
+                    color: colorScale(d.type),
+                    weight: 2,
+                    fillColor: colorScale(d.type),
+                    fillOpacity: 0.5
+                  }).addTo(map);
+              });
+
+              // Run the data through crossfilter and load our 'facts'
+              var facts = crossfilter(data);
+
+              //Create dataTable dimension using the date (dtg)
+              var dateDimension = facts.dimension(function(d){
+                  return d.date;
+              });
+
+              //Create a dimension for Type
+              var typeDimension = facts.dimension(function(d){
+                  return d.type;
+              });
+
+              //Create a group for Type that just counts the number of elements in the group
+              var typeGroup = typeDimension.group();
+
+              // Create a dimension just for the hour from the datetime in the dataset
+              //hint: use d3.time.hour() function
+              // var hourDimension = facts.dimension(function(d){
+              //     return d3.time.hour(d.data);
+              // });
+
+              //Create a group for the hour dimension that just counts the number of elements per hour
+              //var hourGroup = hourDimension.group();
+
+              // Setup the charts
+              totalChart
+              .width(768)
+              .height(480)
+              .x(d3.scale.linear().domain([6,20]))
+              .elasticX(true)
+              .dimension(typeDimension)
+              .group(typeGroup)
+              // Configure Magnitude Bar Graph
+              // 480 x 150
+              // x dimension domain: [0, 8]
+              //use a gap of 56, this number is very obscure. It seems to depend on the width of the chart and on the number of dimensions. It was found using trial and error.
+              //set elasticY to true
+              // magChart.width(480)
+              //   .height(150)
+              //   .margins({top: 10, right: 10, bottom: 20, left: 40})
+              //   .dimension(magDimension)
+              //   .x(d3.scale.linear().domain([0,8]))
+              //   .gap(56)
+              //   .elasticY(true) 
+              //   .transitionDuration(500)
+              //   .centerBar(true)
+              //   .group(magGroup);
+                
+
+              // Configure Depth bar graph
+              // 480 x 150
+              // x dimension domain: [0, 100]
+              // depChart.width(480)
+              //   .height(150)
+              //   .margins({top: 10, right: 10, bottom: 20, left: 40})
+              //   .dimension(magDimension)
+              //   .x(d3.scale.linear().domain([0,100]))
+              //   .gap(1)
+              //   .elasticY(true) 
+              //   .transitionDuration(500)
+              //   .centerBar(true)
+              //   .group(depGroup);
+
+              // Configure Time line graph
+              // height: 150
+              //x dimension: build the time scale from the data: d3.time.scale().domain(d3.extent(data, function(d) { return d.dtime; }))
+              // timeChart.width(960)
+              //        .height(150)
+              //        .transitionDuration(500)
+              //        .margins({top: 10, right: 10, bottom: 20, left: 40})
+              //        .dimension(hourDimension)
+              //        .group(hourGroup)
+              //        .brushOn(false)
+              //        .elasticY(true)
+              //        .x(d3.time.scale().domain(d3.extent(data, function(d) { return d.dtg;})))
+
+              // Configure Table
+              // dataTable.width(960)
+              //   .height(800)
+              //   .dimension(dateDimension)
+              //   .group(function(d){return "Earthquake Table";})
+              //   .columns([
+              //     function (d) {return d.dtg;},
+              //     function (d) {return d.mag;},
+              //     function (d) {return d.dep;},
+              //     function (d) {return d.long;},
+              //     function (d) {return d.lat;},
+              //     ])
+              //   .sortBy(function (d) {return d.dtg;})
+              //   .order(d3.ascending)
+              //   .size(10);
+
+              // Render the Charts
+              dc.renderAll();
+  
+            });
+            </script>
+
+            <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+            <!-- Include all compiled plugins (below), or include individual files as needed -->
+             <!-- Latest compiled and minified JavaScript -->
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+                
+        </body>
+</html>
