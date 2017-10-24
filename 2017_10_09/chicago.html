@@ -47,7 +47,7 @@
             }).addTo(map);
 
             var colorScale = d3.scale.ordinal()
-                .domain(["HOMICIDE","ROBBERY","BURGLARY"])
+                .domain(["BURGLARY","ROBBERY","HOMICIDE"])
                 .range(["#9e4d56","#6f9364","#726089"]);
 
             // load data from a csv file
@@ -72,8 +72,14 @@
 
               //Create dataTable dimension using the date (dtg)
               var dateDimension = facts.dimension(function(d){
-                  return d.date;
+                  return [d.type, d.date];
               });
+
+              //Create dataTable Group
+              var dateGroup = dateDimension.group().reduceSum(function(d){
+                  return 1;
+              });
+
 
               //Create a dimension for Type
               var typeDimension = facts.dimension(function(d){
@@ -94,72 +100,35 @@
 
               // Setup the charts
               totalChart
-              .width(768)
-              .height(480)
-              .x(d3.scale.linear().domain([6,20]))
-              .elasticX(true)
-              .dimension(typeDimension)
-              .group(typeGroup)
-              // Configure Magnitude Bar Graph
-              // 480 x 150
-              // x dimension domain: [0, 8]
-              //use a gap of 56, this number is very obscure. It seems to depend on the width of the chart and on the number of dimensions. It was found using trial and error.
-              //set elasticY to true
-              // magChart.width(480)
-              //   .height(150)
-              //   .margins({top: 10, right: 10, bottom: 20, left: 40})
-              //   .dimension(magDimension)
-              //   .x(d3.scale.linear().domain([0,8]))
-              //   .gap(56)
-              //   .elasticY(true) 
-              //   .transitionDuration(500)
-              //   .centerBar(true)
-              //   .group(magGroup);
-                
+                .width(480)
+                .height(150)
+                .margins({top: 10, right: 10, bottom: 20, left: 40})
+                .x(d3.scale.linear().domain([6,20]))
+                .elasticX(true)
+                .dimension(typeDimension)
+                .group(typeGroup)
+                .ordinalColors(["#9e4d56","#6f9364","#726089"]);
 
-              // Configure Depth bar graph
-              // 480 x 150
-              // x dimension domain: [0, 100]
-              // depChart.width(480)
-              //   .height(150)
-              //   .margins({top: 10, right: 10, bottom: 20, left: 40})
-              //   .dimension(magDimension)
-              //   .x(d3.scale.linear().domain([0,100]))
-              //   .gap(1)
-              //   .elasticY(true) 
-              //   .transitionDuration(500)
-              //   .centerBar(true)
-              //   .group(depGroup);
-
-              // Configure Time line graph
-              // height: 150
-              //x dimension: build the time scale from the data: d3.time.scale().domain(d3.extent(data, function(d) { return d.dtime; }))
-              // timeChart.width(960)
-              //        .height(150)
-              //        .transitionDuration(500)
-              //        .margins({top: 10, right: 10, bottom: 20, left: 40})
-              //        .dimension(hourDimension)
-              //        .group(hourGroup)
-              //        .brushOn(false)
-              //        .elasticY(true)
-              //        .x(d3.time.scale().domain(d3.extent(data, function(d) { return d.dtg;})))
-
-              // Configure Table
-              // dataTable.width(960)
-              //   .height(800)
-              //   .dimension(dateDimension)
-              //   .group(function(d){return "Earthquake Table";})
-              //   .columns([
-              //     function (d) {return d.dtg;},
-              //     function (d) {return d.mag;},
-              //     function (d) {return d.dep;},
-              //     function (d) {return d.long;},
-              //     function (d) {return d.lat;},
-              //     ])
-              //   .sortBy(function (d) {return d.dtg;})
-              //   .order(d3.ascending)
-              //   .size(10);
-
+              perDayChart
+                .width(480)
+                .height(150)
+                .chart(function(c) { return dc.lineChart(c).interpolate('cardinal'); })
+                .x(d3.scale.linear().domain([new Date(2017, 9, 8), new Date(2017, 10, 21)]))
+                .brushOn(false)
+                .yAxisLabel("Number of Crimes")
+                .xAxisLabel("Time")
+                .clipPadding(10)
+                .elasticY(true)
+                .dimension(dateDimension)
+                .group(dateGroup)
+                .mouseZoomable(true)
+                .seriesAccessor(function(d) {return d.type;})
+                // .keyAccessor(function(d) {return +d.key[1];})
+                // .valueAccessor(function(d) {return +d.value - 500;})
+                .legend(dc.legend().x(350).y(350).itemHeight(13).gap(5).horizontal(1).legendWidth(140).itemWidth(70));
+              //chart.yAxis().tickFormat(function(d) {return d3.format(',d')(d+299500);});
+              //chart.margins().left += 40;
+              
               // Render the Charts
               dc.renderAll();
   
