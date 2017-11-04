@@ -28,14 +28,31 @@ function Network() {
   }
 
   function setupData(data) {
-    // var circleRadius, countExtent;
-    // // initialize circle radius scale
-    // countExtent = d3.extent(data.nodes, function(d) {
-    //   return d.playcount;
-    // });
-    // circleRadius = d3.scale.sqrt().range([3, 15]).domain(countExtent);
-    //First let's randomly dispose data.nodes (x/y) within the the width/height
-    // of the visualization and set a fixed radius for now
+
+    var colorMap = [
+                "#0D0A0B",
+                "#004884",
+                "#10B9A5",
+                "#E3E3E3",
+                "#EF798A",
+                "#544047",
+                "#005FAD",
+                "#14E8CF",
+                "#E2D96F",
+                "#EF1F3E",
+                "#FC99A8"
+            ];  
+    //Calculation of degrees of nodes
+    var degreeMap = {};
+    data.nodes.forEach(function(n) {
+      degreeMap[n.id] = 0;
+      data.links.forEach(function(l) {
+        if(n.id == l.source || n.id == l.target){
+          degreeMap[n.id] += 1          
+        }
+      })
+    })
+
     data.nodes.forEach(function(n) {
       var randomnumber;
       // set initial x/y to values within the width/height
@@ -43,7 +60,9 @@ function Network() {
       n.x = randomnumber = Math.floor(Math.random() * width);
       n.y = randomnumber = Math.floor(Math.random() * height);
       // add radius to the node so we can use it later
-      n.radius = 100;//circleRadius(n.playcount);
+      n.degree = degreeMap[n.id];
+      n.radius = Math.sqrt(n.degree)*3;
+      n.color = colorMap[n.group]
     });
     // Then we will create a map with
     // id's -> node objects
@@ -63,7 +82,7 @@ function Network() {
     var content;
     content = '<span><p class="main">'+d.id+'<span></p>'
     content += '<hr class="tooltip-hr">'
-    content += '<span><p class="main">'+"Conections: 3"+'<span></p>'
+    content += '<span><p class="main">'+"Conections: "+d.degree+'<span></p>'
     tooltip.showTooltip(content, d3.event);
 
     return d3.select(this).style("stroke","black").style("stroke-width",2.0);
@@ -95,6 +114,8 @@ function Network() {
         return d.y;})
       .attr("r", function(d) {
         return d.radius;})
+      .attr("fill", function(d){
+        return d.color;})
       .style("stroke-width", 1.0);
     node.on("mouseover", showDetails).on("mouseout", hideDetails);
   }
@@ -154,7 +175,7 @@ function Network() {
     // enter / exit for links
     updateLinks();
     // set the tick callback, charge and linkDistance
-    force.on("tick", forceTick).charge(-200).linkDistance(50);
+    force.on("tick", forceTick).charge(-200).linkDistance(100);
     // perform rendering and start force layout
     return force.start();
   };
