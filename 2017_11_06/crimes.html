@@ -70,8 +70,6 @@
 </div>
 <script type="text/javascript" src="data/bairros.js"></script>
 <script type="text/javascript">
-    let brewerColors = colorbrewer.Blues[5];
-	
 	let map = L.map('map').setView([-3.792614,-38.515877], 12);
 	L.tileLayer("https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
 	{ attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>',
@@ -89,19 +87,23 @@
 	info.update = function (feat) {
             //console.log(feat);
 			this._div.innerHTML = '<h5>Número de homicídios</h5>' +  (feat ?
-				'<b>' + feat.properties.NOME + '</b><br />' + parseFloat((100000*homicidiosByName.get(feat.properties.NOME)/populacaoByName.get(feat.properties.NOME)).toFixed(2)) + ' homicídios por 100 mil habitantes'
+				'<b>' + feat.properties.NOME + '</b><br />' + homicidiosByName.get(feat.properties.NOME) + ' homicídios por 100 mil habitantes'
 				: 'Passe o mouse sobre um bairro');
 	};
 
 	info.addTo(map);
 	
 	// get color depending on number of cases
-	let quantize = d3.scale.quantize()
-    .domain([0, 150])
+	let brewerColors = ["#ffffff","#dae6ea","#a2c1cc","#6a9cad","#38697a","#23424c","#000000"]
+	//["#f1eef6","#d0d1e6","#a6bddb","#74a9cf","#2b8cbe","#045a8d"]
+	//colorbrewer.Blues[6];
+	brewerColors.unshift("#995b46");
+	let quantize = d3.scale.quantile()
+    .domain([-1, 0, 5, 25, 50, 75, 100, 200, 500])
     .range(brewerColors);
 
 	function style(feature) {
-		var value = parseFloat((100000*homicidiosByName.get(feature.properties.NOME)/populacaoByName.get(feature.properties.NOME)).toFixed(2));
+		var value = homicidiosByName.get(feature.properties.NOME);
 		 return {
 					weight: 1,
 					opacity: 1,
@@ -162,7 +164,13 @@
 	d3.csv("data/homicidios_2012.csv", function(data){
         //format data
         data.forEach(function(d) {
-            homicidiosByName.set(d.Bairro,+d.Homicidios);
+        	pop = populacaoByName.get(d.Bairro);
+    		if(pop>0){
+        		d.cnt = parseFloat((100000*d.Homicidios/pop)).toFixed(2);
+        	}else{
+        		d.cnt = -1;
+        	}
+            homicidiosByName.set(d.Bairro,d.cnt);
         });
 		
 		//bairrosData is defined in file bairros.js		 		
@@ -196,33 +204,45 @@
 
    	legend.addTo(map);
 
-   	var barChart = dc.barChart('#chart');
+   	//visualing all data in bar chart
+  //  	var barChart = dc.barChart('#chart');
 
-        d3.csv("data/homicidios_2012.csv", function(error, data){ 
-            //criando um crossfilter
-            var facts = crossfilter(data);
+  //   d3.csv("data/homicidios_2012.csv", function(error, data){ 
+  //   	data.forEach(function (d) {
+  //   		pop = populacaoByName.get(d.Bairro);
+  //   		if(pop>0){
+  //       		d.cnt = parseInt((100000*d.Homicidios/pop));
+  //       	}else{
+  //       		d.cnt = 0;
+  //       	}
+  //       });
+  //       //criando um crossfilter
+  //       var facts = crossfilter(data);
 
-            var bairroDim = facts.dimension(function(d){
-                return d.Bairro;
-            });
+  //       var bairroDim = facts.dimension(function(d){
+  //           return d.Bairro;
+  //       });
 
-            var homicidiosGroup = bairroDim.group().reduceSum(function(d){
-                return parseFloat((100000*d.Homicidios/populacaoByName.get(d.Bairro)).toFixed(2))
-            });
+  //       var homicidiosGroup = bairroDim.group().reduceSum(function(d){
+  //           return d.cnt;
+  //       });
+  //       //.order(function(d){return d.cnt}).top(1);
+  //       var sortByCnt = data.sort(function (a, b) { return a.cnt > b.cnt; });
+		// var names = sortByCnt.map(function (d) { return d.Bairro; });
 
-            barChart.width(800)
-                     .height(400)
-                     .margins({top: 30, right: 50, bottom: 25, left: 40})
-                     .dimension(bairroDim)
-                     .xUnits(dc.units.ordinal)
-                     .x(d3.scale.ordinal())
-                     .renderHorizontalGridLines(true)
-                     .legend(dc.legend().x(650).y(10).itemHeight(13).gap(5))
-                     .brushOn(false)
-                     .group(homicidiosGroup);
+  //       barChart.width(800)
+  //                .height(400)
+  //                .margins({top: 30, right: 50, bottom: 25, left: 40})
+  //                .dimension(bairroDim)
+  //                .xUnits(dc.units.ordinal)
+  //                .x(d3.scale.ordinal().domain(names))
+  //                .renderHorizontalGridLines(true)
+  //                .legend(dc.legend().x(650).y(10).itemHeight(13).gap(5))
+  //                .brushOn(false)
+  //                .group(homicidiosGroup);
 
-            dc.renderAll();
-        });
+  //       dc.renderAll();
+  //   });
 </script>
 
 </body>
