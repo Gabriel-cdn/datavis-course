@@ -97,9 +97,9 @@
 	let brewerColors = ["#ffffff","#dae6ea","#a2c1cc","#6a9cad","#38697a","#23424c","#000000"]
 	//["#f1eef6","#d0d1e6","#a6bddb","#74a9cf","#2b8cbe","#045a8d"]
 	//colorbrewer.Blues[6];
-	brewerColors.unshift("#995b46");
+	//brewerColors.unshift("#995b46");
 	let quantize = d3.scale.quantile()
-    .domain([-1, 0, 5, 25, 50, 75, 100, 200, 500])
+    .domain([0, 5, 25, 50, 75, 100, 200, 500])
     .range(brewerColors);
 
 	function style(feature) {
