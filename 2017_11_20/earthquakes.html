@@ -251,7 +251,6 @@
               var visibleMarkers = new Array(ids.length);
               var count = 0;
               markerLayer.eachLayer(function(layer) {
-                layer.setSize(layer.size/2);
                 if( map.getBounds().contains(layer.getLatLng()) ){
                   //add layer.publicid to some array visibleMarkers
                   visibleMarkers[count] = layer.publicid;
